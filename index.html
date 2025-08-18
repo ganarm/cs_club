@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUBE - Futuristic Tech Experience</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            perspective: 1000px;
+        }
+        
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0a0a2a 0%, #000 70%);
+            overflow: hidden;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(0, 100, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 100, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+        
+        .binary-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: rgba(0, 255, 150, 0.3);
+            font-size: 16px;
+            font-family: monospace;
+            z-index: 2;
+        }
+        
+        .binary-column {
+            position: absolute;
+            top: -100px;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+        
+        .network-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+        }
+        
+        .line {
+            position: absolute;
+            background: rgba(0, 200, 255, 0.1);
+            transform-origin: left center;
+        }
+        
+        .cube-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            z-index: 10;
+        }
+        
+        .cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(25deg);
+            animation: rotate 20s infinite linear;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotateX(-20deg) rotateY(0deg); }
+            100% { transform: rotateX(-20deg) rotateY(360deg); }
+        }
+        
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0, 255, 255, 0.2), 
+                        0 0 30px rgba(0, 200, 255, 0.5);
+            opacity: 0.9;
+        }
+        
+        .face::before {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            background: 
+                linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%);
+            background-size: 20px 20px;
+        }
+        
+        .front  { transform: translateZ(150px); }
+        .back   { transform: rotateY(180deg) translateZ(150px); }
+        .right  { transform: rotateY(90deg) translateZ(150px); }
+        .left   { transform: rotateY(-90deg) translateZ(150px); }
+        .top    { transform: rotateX(90deg) translateZ(150px); }
+        .bottom { transform: rotateX(-90deg) translateZ(150px); }
+        
+        .front  { background: linear-gradient(135deg, rgba(0, 100, 255, 0.8), rgba(0, 50, 150, 0.5)); }
+        .back   { background: linear-gradient(135deg, rgba(0, 200, 100, 0.8), rgba(0, 100, 50, 0.5)); }
+        .right  { background: linear-gradient(135deg, rgba(150, 0, 255, 0.8), rgba(75, 0, 150, 0.5)); }
+        .left   { background: linear-gradient(135deg, rgba(255, 200, 0, 0.8), rgba(200, 150, 0, 0.5)); }
+        .top    { background: linear-gradient(135deg, rgba(255, 50, 50, 0.8), rgba(200, 0, 0, 0.5)); }
+        .bottom { background: linear-gradient(135deg, rgba(0, 200, 255, 0.8), rgba(0, 100, 200, 0.5)); }
+        
+        .light-trail {
+            position: absolute;
+            width: 120%;
+            height: 120%;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 5;
+            opacity: 0.5;
+        }
+        
+        .blue-trail { background: radial-gradient(circle, rgba(0, 100, 255, 0.8), transparent 70%); }
+        .green-trail { background: radial-gradient(circle, rgba(0, 255, 150, 0.8), transparent 70%); }
+        .purple-trail { background: radial-gradient(circle, rgba(150, 0, 255, 0.8), transparent 70%); }
+        
+        .hologram {
+            position: absolute;
+            font-size: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 0 15px rgba(0, 200, 255, 0.8);
+            z-index: 4;
+            animation: float 6s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(10px, -20px); opacity: 1; }
+        }
+        
+        .logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s;
+        }
+        
+        .logo h1 {
+            font-size: 80px;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, cyan, gold, magenta, cyan);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+            letter-spacing: 10px;
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { background-position: -500%; }
+            100% { background-position: 500%; }
+        }
+        
+        .logo h2 {
+            font-size: 28px;
+            color: white;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px cyan;
+        }
+        
+        .logo h3 {
+            font-size: 20px;
+            color: #aaa;
+            font-weight: 300;
+            font-style: italic;
+            text-shadow: 0 0 5px cyan;
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px cyan;
+            animation: sparkle 2s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        .spotlight {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            top: -25%;
+            left: -25%;
+            background: radial-gradient(circle at center, rgba(0, 100, 255, 0.2) 0%, transparent 60%);
+            z-index: 0;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="grid-overlay"></div>
+        <div class="binary-stream"></div>
+        <div class="network-lines"></div>
+        <div class="particles"></div>
+        <div class="spotlight"></div>
+        
+        <div class="cube-container">
+            <div class="light-trail blue-trail"></div>
+            <div class="light-trail green-trail"></div>
+            <div class="light-trail purple-trail"></div>
+            
+            <div class="cube">
+                <div class="face front"></div>
+                <div class="face back"></div>
+                <div class="face right"></div>
+                <div class="face left"></div>
+                <div class="face top"></div>
+                <div class="face bottom"></div>
+            </div>
+        </div>
+        
+        <div class="logo">
+            <h1>CUBE</h1>
+            <h2>Computer United Bright Enthusiasts</h2>
+            <h3>Department of Computer Science</h3>
+        </div>
+        
+        <div class="controls">Click to show/hide logo | Drag to rotate cube</div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Create binary streams
+            function createBinaryStreams() {
+                const binaryStream = $('.binary-stream');
+                const columns = Math.floor(window.innerWidth / 30);
+                
+                for (let i = 0; i < columns; i++) {
+                    const col = $('<div class="binary-column"></div>');
+                    col.css({
+                        left: `${(i / columns) * 100}%`,
+                        animationDuration: `${Math.random() * 10 + 10}s`,
+                        animationDelay: `${Math.random() * 5}s`
+                    });
+                    
+                    // Create characters in the column
+                    const charCount = Math.floor(window.innerHeight / 20);
+                    for (let j = 0; j < charCount; j++) {
+                        const char = Math.random() > 0.5 ? '0' : '1';
+                        col.append(`<div style="opacity:${Math.random() * 0.5 + 0.1};">${char}</div>`);
+                    }
+                    
+                    binaryStream.append(col);
+                }
+            }
+            
+            // Create network lines
+            function createNetworkLines() {
+                const networkLines = $('.network-lines');
+                const lineCount = 30;
+                
+                for (let i = 0; i < lineCount; i++) {
+                    const line = $('<div class="line"></div>');
+                    const length = Math.random() * 200 + 50;
+                    const angle = Math.random() * 360;
+                    const left = Math.random() * window.innerWidth;
+                    const top = Math.random() * window.innerHeight;
+                    const duration = Math.random() * 5 + 5;
+                    
+                    line.css({
+                        width: `${length}px`,
+                        transform: `rotate(${angle}deg)`,
+                        left: `${left}px`,
+                        top: `${top}px`,
+                        animation: `pulse ${duration}s infinite`,
+                        opacity: Math.random() * 0.3
+                    });
+                    
+                    networkLines.append(line);
+                }
+            }
+            
+            // Create holographic icons
+            function createHolograms() {
+                const icons = [
+                    '<i class="fas fa-microchip"></i>',
+                    '<i class="fas fa-brain"></i>',
+                    '<i class="fas fa-code"></i>',
+                    '<i class="fas fa-network-wired"></i>',
+                    '<i class="fas fa-server"></i>',
+                    '<i class="fas fa-robot"></i>',
+                    '<i class="fas fa-cloud"></i>',
+                    '<i class="fas fa-database"></i>'
+                ];
+                
+                for (let i = 0; i < 20; i++) {
+                    const icon = icons[Math.floor(Math.random() * icons.length)];
+                    const hologram = $(`<div class="hologram">${icon}</div>`);
+                    hologram.css({
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        fontSize: `${Math.random() * 20 + 20}px`,
+                        animationDelay: `${Math.random() * 5}s`
+                    });
+                    
+                    $('.scene').append(hologram);
+                }
+            }
+            
+            // Create particles
+            function createParticles() {
+                const particles = $('.particles');
+                const particleCount = 200;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = $('<div class="particle"></div>');
+                    particle.css({
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        background: `hsl(${Math.random() * 360}, 100%, 70%)`
+                    });
+                    
+                    particles.append(particle);
+                }
+            }
+            
+            // Initialize all effects
+            createBinaryStreams();
+            createNetworkLines();
+            createHolograms();
+            createParticles();
+            
+            // Logo toggle
+            let logoVisible = false;
+            $(document).on('click', function() {
+                logoVisible = !logoVisible;
+                $('.logo').css('opacity', logoVisible ? 1 : 0);
+            });
+            
+            // Interactive cube rotation
+            let isDragging = false;
+            let lastX, lastY;
+            let rotationX = -20;
+            let rotationY = 25;
+            
+            $(document).on('mousedown touchstart', function(e) {
+                isDragging = true;
+                lastX = e.clientX || e.originalEvent.touches[0].clientX;
+                lastY = e.clientY || e.originalEvent.touches[0].clientY;
+                $('.cube').css('animation', 'none');
+                e.preventDefault();
+            });
+            
+            $(document).on('mousemove touchmove', function(e) {
+                if (!isDragging) return;
+                
+                const x = e.clientX || e.originalEvent.touches[0].clientX;
+                const y = e.clientY || e.originalEvent.touches[0].clientY;
+                
+                const deltaX = x - lastX;
+                const deltaY = y - lastY;
+                
+                rotationY += deltaX * 0.5;
+                rotationX -= deltaY * 0.5;
+                
+                $('.cube').css('transform', `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`);
+                
+                lastX = x;
+                lastY = y;
+                e.preventDefault();
+            });
+            
+            $(document).on('mouseup touchend', function() {
+                isDragging = false;
+            });
+            
+            // Auto show logo after 5 seconds
+            setTimeout(function() {
+                $('.logo').css('opacity', 1);
+                logoVisible = true;
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
