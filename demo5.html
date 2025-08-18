@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUBE - Computer United Bright Enthusiasts</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            perspective: 1000px;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+            animation: backgroundPulse 4s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: 2;
+        }
+
+        .cube-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: initialRotate 8s linear forwards, rotateCube 20s linear infinite 8s;
+            z-index: 5;
+        }
+
+        .cube {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 15vw;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3) inset;
+            transition: all 0.3s ease;
+        }
+
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: circuitPattern 3s ease-in-out infinite alternate;
+        }
+
+        .front {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.7), rgba(0, 128, 255, 0.7));
+            transform: translateZ(50vw);
+            color: #fff;
+        }
+
+        .back {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.7), rgba(128, 0, 255, 0.7));
+            transform: translateZ(-50vw) rotateY(180deg);
+            color: #fff;
+        }
+
+        .right {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.7), rgba(128, 255, 0, 0.7));
+            transform: rotateY(90deg) translateZ(50vw);
+            color: #fff;
+        }
+
+        .left {
+            background: linear-gradient(135deg, rgba(255, 255, 0, 0.7), rgba(255, 128, 0, 0.7));
+            transform: rotateY(-90deg) translateZ(50vw);
+            color: #fff;
+        }
+
+        .top {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.7), rgba(255, 0, 128, 0.7));
+            transform: rotateX(90deg) translateZ(50vw);
+            color: #fff;
+        }
+
+        .bottom {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.7), rgba(255, 0, 255, 0.7));
+            transform: rotateX(-90deg) translateZ(50vw);
+            color: #fff;
+        }
+
+        .binary-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .binary-column {
+            position: absolute;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5vw;
+            font-weight: bold;
+            animation: binaryFall 5s linear infinite;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .binary-digit {
+            display: block;
+            margin: 2px 0;
+            text-shadow: 0 0 8px currentColor;
+            animation: digitPulse 1.5s infinite alternate;
+        }
+
+        .floating-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .icon {
+            position: absolute;
+            font-size: 30px;
+            color: #00ffff;
+            text-shadow: 0 0 20px currentColor;
+            animation: floatIcon 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .light-trails {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            margin: -200px 0 0 -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 255, 255, 0.1) 70%, transparent 100%);
+            animation: lightTrails 2s ease-in-out infinite alternate;
+            z-index: 0;
+        }
+
+        .logo-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .logo-text h1 {
+            font-size: 5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+
+        .logo-text p {
+            font-size: 1.8rem;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+        }
+
+        .logo-text .dept {
+            font-size: 1.5rem;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
+            font-style: italic;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+            animation: particleFloat 6s linear infinite;
+        }
+
+        .bg-cubes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        .bg-cube-container {
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: bgCubeRotate 15s linear infinite;
+        }
+
+        .bg-cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .bg-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset;
+            opacity: 0.7;
+        }
+
+        .bg-front {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateZ(50%);
+        }
+
+        .bg-back {
+            background: rgba(255, 0, 255, 0.2);
+            transform: translateZ(-50%) rotateY(180deg);
+        }
+
+        .bg-right {
+            background: rgba(0, 255, 0, 0.2);
+            transform: rotateY(90deg) translateZ(50%);
+        }
+
+        .bg-left {
+            background: rgba(255, 255, 0, 0.2);
+            transform: rotateY(-90deg) translateZ(50%);
+        }
+
+        .bg-top {
+            background: rgba(255, 0, 0, 0.2);
+            transform: rotateX(90deg) translateZ(50%);
+        }
+
+        .bg-bottom {
+            background: rgba(0, 255, 255, 0.2);
+            transform: rotateX(-90deg) translateZ(50%);
+        }
+
+        @keyframes initialRotate {
+            0% { 
+                transform: scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg); 
+            }
+            50% { 
+                transform: scale(1) rotateX(180deg) rotateY(180deg) rotateZ(0deg);
+            }
+            100% { 
+                transform: scale(0.3) rotateX(360deg) rotateY(360deg) rotateZ(0deg);
+            }
+        }
+
+        @keyframes rotateCube {
+            0% { transform: scale(0.3) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: scale(0.3) rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes circuitPattern {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes binaryFall {
+            0% { 
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes digitPulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2);
+            }
+        }
+
+        @keyframes lightTrails {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInLogo {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            100% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bgCubeRotate {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes fadeInCubes {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="background"></div>
+        <div class="grid"></div>
+        
+        <div class="particles" id="particles"></div>
+        
+        <div class="light-trails"></div>
+        
+        <div class="binary-stream" id="binaryStream"></div>
+        
+        <div class="floating-icons" id="floatingIcons"></div>
+        
+        <div class="cube-container" id="cubeContainer">
+            <div class="cube">
+                <div class="face front">AI</div>
+                <div class="face back">CODE</div>
+                <div class="face right">DATA</div>
+                <div class="face left">TECH</div>
+                <div class="face top">CUBE</div>
+                <div class="face bottom">CS</div>
+            </div>
+        </div>
+        
+        <div class="bg-cubes" id="bgCubes"></div>
+        
+        <div class="logo-text" id="logoText">
+            <h1>CUBE</h1>
+            <p>Computer United Bright Enthusiasts</p>
+            <div class="dept">Department of Computer Science</div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Create binary stream with multi-colored digits
+            function createBinaryStream() {
+                const stream = $('#binaryStream');
+                const columns = Math.floor(window.innerWidth / 25);
+                
+                for (let i = 0; i < columns; i++) {
+                    const column = $('<div class="binary-column"></div>');
+                    let binaryHTML = '';
+                    
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        // Generate random colors for digits
+                        const hue = Math.floor(Math.random() * 360);
+                        const saturation = 70 + Math.floor(Math.random() * 30);
+                        const lightness = 50 + Math.floor(Math.random() * 30);
+                        const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                        
+                        binaryHTML += `<span class="binary-digit" style="color: ${color}">${digit}</span>`;
+                    }
+                    
+                    column.html(binaryHTML);
+                    column.css({
+                        left: i * 25 + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (5 + Math.random() * 10) + 's'
+                    });
+                    
+                    stream.append(column);
+                }
+            }
+
+            // Create floating icons
+            function createFloatingIcons() {
+                const icons = ['🤖', '⚡', '💻', '🔬', '🌐', '⚙️', '🚀', '💡'];
+                const container = $('#floatingIcons');
+                
+                icons.forEach((icon, index) => {
+                    const iconElement = $('<div class="icon"></div>');
+                    iconElement.text(icon);
+                    iconElement.css({
+                        top: Math.random() * 80 + 10 + '%',
+                        left: Math.random() * 80 + 10 + '%',
+                        animationDelay: index * 0.5 + 's'
+                    });
+                    container.append(iconElement);
+                });
+            }
+
+            // Create particles
+            function createParticles() {
+                const container = $('#particles');
+                
+                for (let i = 0; i < 200; i++) {
+                    const particle = $('<div class="particle"></div>');
+                    const hue = Math.floor(Math.random() * 360);
+                    particle.css({
+                        left: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 6 + 's',
+                        animationDuration: (Math.random() * 4 + 4) + 's',
+                        background: `hsl(${hue}, 100%, 70%)`,
+                        boxShadow: `0 0 10px hsl(${hue}, 100%, 50%)`
+                    });
+                    container.append(particle);
+                }
+            }
+            
+            // Create background cubes
+            function createBackgroundCubes() {
+                const container = $('#bgCubes');
+                const count = 50; // Increased to 50 cubes
+                
+                for (let i = 0; i < count; i++) {
+                    const size = 20 + Math.random() * 50; // Smaller cubes
+                    const cubeContainer = $('<div class="bg-cube-container"></div>');
+                    const cube = $('<div class="bg-cube"></div>');
+                    
+                    cubeContainer.css({
+                        top: Math.random() * 100 + '%',
+                        left: Math.random() * 100 + '%',
+                        width: size + 'px',
+                        height: size + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (10 + Math.random() * 20) + 's'
+                    });
+                    
+                    // Create cube faces
+                    const faces = [
+                        $('<div class="bg-face bg-front"></div>'),
+                        $('<div class="bg-face bg-back"></div>'),
+                        $('<div class="bg-face bg-right"></div>'),
+                        $('<div class="bg-face bg-left"></div>'),
+                        $('<div class="bg-face bg-top"></div>'),
+                        $('<div class="bg-face bg-bottom"></div>')
+                    ];
+                    
+                    // Position faces
+                    faces[0].css('transform', `translateZ(${size/2}px)`);
+                    faces[1].css('transform', `translateZ(-${size/2}px) rotateY(180deg)`);
+                    faces[2].css('transform', `rotateY(90deg) translateZ(${size/2}px)`);
+                    faces[3].css('transform', `rotateY(-90deg) translateZ(${size/2}px)`);
+                    faces[4].css('transform', `rotateX(90deg) translateZ(${size/2}px)`);
+                    faces[5].css('transform', `rotateX(-90deg) translateZ(${size/2}px)`);
+                    
+                    // Add faces to cube
+                    faces.forEach(face => cube.append(face));
+                    
+                    // Add cube to container
+                    cubeContainer.append(cube);
+                    container.append(cubeContainer);
+                }
+                
+                // Fade in background cubes
+                setTimeout(() => {
+                    container.css('opacity', 1);
+                }, 100);
+            }
+
+            // Initialize effects
+            createBinaryStream();
+            createFloatingIcons();
+            createParticles();
+
+            // Transform to logo after 10 seconds
+            setTimeout(function() {
+                // Add scaling animation to the cube
+                $('#cubeContainer').css('animation', 'initialRotate 8s linear forwards');
+                
+                setTimeout(function() {
+                    $('#binaryStream').fadeOut(1500);
+                    $('#floatingIcons').fadeOut(1500);
+                    
+                    setTimeout(function() {
+                        // Create background cubes and show logo
+                        createBackgroundCubes();
+                        $('#logoText').css('animation', 'fadeInLogo 3s ease-out forwards');
+                    }, 1000);
+                }, 8000);
+            }, 2000);
+
+            // Add dynamic lighting effects
+            setInterval(function() {
+                $('.face').each(function() {
+                    const randomOpacity = 0.7 + Math.random() * 0.3;
+                    $(this).css('opacity', randomOpacity);
+                });
+            }, 200);
+
+            // Add mouse interaction
+            $(document).mousemove(function(e) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 20;
+                const y = (e.clientY / window.innerHeight - 0.5) * 20;
+                
+                $('#cubeContainer').css('transform', 
+                    `scale(1) rotateX(${y}deg) rotateY(${x}deg) rotateZ(0deg)`
+                );
+            });
+
+            // Refresh binary stream periodically
+            setInterval(function() {
+                $('.binary-column').each(function() {
+                    let binaryHTML = '';
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const hue = Math.floor(Math.random() * 360);
+                        const saturation = 70 + Math.floor(Math.random() * 30);
+                        const lightness = 50 + Math.floor(Math.random() * 30);
+                        const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                        
+                        binaryHTML += `<span class="binary-digit" style="color: ${color}">${digit}</span>`;
+                    }
+                    $(this).html(binaryHTML);
+                });
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
