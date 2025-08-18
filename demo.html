@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gold Voxel Cube — Executable Demo</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+  :root{
+    --bg:#060608;
+    --scene-size: min(78vmin, 820px);
+    --voxel-size: 26px; /* base voxel face size (overriden on resize if needed) */
+    --gap: 34px;        /* spacing between voxel centers */
+  }
+  html,body{height:100%;margin:0;background: radial-gradient(circle at 50% 20%, #151218 0%, #060608 28%, #030305 100%); font-family: Inter, Arial, sans-serif; color:#fff; overflow:hidden;}
+  /* subtle floor reflection */
+  .floorGlow{
+    position:fixed; left:0; right:0; bottom:-15vh; height:60vh; z-index:0; pointer-events:none;
+    background: radial-gradient(40% 20% at 50% 20%, rgba(255,200,140,0.02), transparent 20%),
+                radial-gradient(60% 30% at 50% 50%, rgba(6,182,212,0.015), transparent 30%);
+    filter: blur(26px);
+  }
+
+  .stage{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; perspective:2000px; z-index:5; }
+  .scene{ width:var(--scene-size); height:var(--scene-size); position:relative; transform-style:preserve-3d; transition: transform 0.12s linear; }
+  .voxel{ position:absolute; width:var(--voxel-size); height:var(--voxel-size); transform-style:preserve-3d; will-change: transform, opacity; }
+  .face{ position:absolute; left:0; top:0; width:100%; height:100%; backface-visibility:hidden; border-radius:4px; overflow:hidden; box-sizing:border-box; }
+  /* face transforms */
+  .face.front  { transform: translateZ(calc(var(--voxel-size) / 2)); }
+  .face.back   { transform: rotateY(180deg) translateZ(calc(var(--voxel-size) / 2)); }
+  .face.left   { transform: rotateY(-90deg) translateZ(calc(var(--voxel-size) / 2)); }
+  .face.right  { transform: rotateY(90deg) translateZ(calc(var(--voxel-size) / 2)); }
+  .face.top    { transform: rotateX(90deg) translateZ(calc(var(--voxel-size) / 2)); }
+  .face.bottom { transform: rotateX(-90deg) translateZ(calc(var(--voxel-size) / 2)); }
+
+  /* base materials for faces: dark glossy + subtle variance */
+  .face.front  { background:linear-gradient(180deg,#0c0d0f,#0a0b0d); border:1px solid rgba(255,255,255,0.03); }
+  .face.right  { background:linear-gradient(180deg,#0b0910,#0c0710); border:1px solid rgba(255,255,255,0.03); }
+  .face.left   { background:linear-gradient(180deg,#090b08,#070b07); border:1px solid rgba(255,255,255,0.03); }
+  .face.back   { background:linear-gradient(180deg,#0a0a0b,#050406); border:1px solid rgba(255,255,255,0.02); }
+  .face.top    { background:linear-gradient(180deg,#0e0c0a,#0a0707); border:1px solid rgba(255,255,255,0.02); }
+  .face.bottom { background:linear-gradient(180deg,#05080a,#030405); border:1px solid rgba(255,255,255,0.02); }
+
+  /* tiny gold pixel element (randomized) */
+  .goldPixel{
+    position:absolute;
+    width:6px; height:6px; border-radius:1px;
+    background: linear-gradient(180deg,#ffd96a,#f6b93b);
+    box-shadow: 0 0 8px rgba(255,200,80,0.9), 0 0 18px rgba(255,180,60,0.45);
+    opacity:0.0; transform:scale(.9); transition: opacity .35s ease, transform .35s cubic-bezier(.25,.9,.2,1);
+    pointer-events:none;
+  }
+  .goldPixel.on{ opacity:1; transform:scale(1); }
+
+  /* small top rim highlight lines for the big cube */
+  .rim{
+    position:absolute; inset: -2.5%; z-index:7; pointer-events:none;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.0), 0 0 40px rgba(255,200,80,0.02) inset;
+    border-radius:6px;
+    mix-blend-mode:screen;
+  }
+
+  /* small UI texts */
+  .hud{ position:fixed; left:18px; top:18px; z-index:9; font-weight:700; color:#dbeff3; text-shadow:0 6px 18px rgba(0,0,0,0.6); }
+  .controls{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:9; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:999px; font-size:13px; color:#dbeff3; }
+
+  @media (max-width:520px){
+    :root{ --voxel-size:18px; --gap:24px; --scene-size:86vmin; }
+    .goldPixel{ width:4px; height:4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="floorGlow" aria-hidden="true"></div>
+
+<div class="hud">
+  <div style="font-size:18px">CUBE — Computer United Bright Enthusiasts</div>
+  <div style="font-size:12px; opacity:.85; margin-top:6px">Click center to pause/play • Change GRID in script</div>
+</div>
+
+<div class="stage">
+  <div id="scene" class="scene" role="presentation"></div>
+</div>
+
+<div class="controls">Click to pause/play • Fullscreen (F11) for video capture</div>
+
+<script>
+/* ---------------------------
+   Executable Gold Voxel Cube
+   HTML + CSS + JavaScript (+ jQuery)
+   --------------------------- */
+
+/* CONFIG */
+const GRID = 6;           // number of voxels per side (6 recommended). Increase with caution.
+const VOXEL_SIZE = 26;    // px (try 26 or 22)
+const GAP = 34;           // px spacing (must be slightly > VOXEL_SIZE)
+const GOLD_PX_PROB = 0.09; // probability per face to place a gold pixel (0-1)
+const GOLD_PX_PER_FACE = 1; // approximate number of gold pixels per face (randomized)
+
+/* Scene references */
+const $scene = $('#scene')[0];
+
+/* place CSS variables dynamically */
+$scene.style.setProperty('--voxel-size', VOXEL_SIZE + 'px');
+$scene.style.setProperty('--gap', GAP + 'px');
+
+/* Build grid of voxels (centered) */
+const center = (GRID - 1)/2;
+const voxels = []; // store voxel elements for shading updates
+
+function createVoxel(i,j,k){
+  const el = document.createElement('div');
+  el.className = 'voxel';
+  // compute position in px
+  const x = (i - center) * GAP;
+  const y = (j - center) * GAP;
+  const z = (k - center) * GAP;
+  el.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+
+  // create faces
+  const faces = ['front','back','left','right','top','bottom'];
+  for(const f of faces){
+    const face = document.createElement('div');
+    face.className = 'face ' + f;
+    // add a few gold pixels randomly
+    const overlay = document.createElement('div'); // container for gold pixels
+    overlay.style.position = 'absolute'; overlay.style.inset = '0'; overlay.style.pointerEvents = 'none';
+    // random number of golden pixels
+    const n = Math.random() < GOLD_PX_PROB ? Math.floor(1 + Math.random()*GOLD_PX_PER_FACE) : 0;
+    for(let p=0;p<n;p++){
+      const gp = document.createElement('div');
+      gp.className = 'goldPixel';
+      // random position inside the face
+      const px = Math.floor(6 + Math.random() * (VOXEL_SIZE - 14));
+      const py = Math.floor(6 + Math.random() * (VOXEL_SIZE - 14));
+      gp.style.left = px + 'px';
+      gp.style.top = py + 'px';
+      // random pulse delay for staggered glow
+      gp.style.transitionDelay = (Math.random()*0.5) + 's';
+      overlay.appendChild(gp);
+      // small chance to set it on initially
+      if(Math.random() > 0.4) setTimeout(()=> gp.classList.add('on'), 200 + Math.random()*900);
+    }
+    face.appendChild(overlay);
+    el.appendChild(face);
+  }
+
+  return el;
+}
+
+function buildGrid(){
+  // remove previous
+  $scene.innerHTML = '';
+  // optional rim/outline layer to emphasize big cube edges
+  const rim = document.createElement('div'); rim.className='rim';
+  $scene.appendChild(rim);
+
+  for(let i=0;i<GRID;i++){
+    for(let j=0;j<GRID;j++){
+      for(let k=0;k<GRID;k++){
+        const v = createVoxel(i,j,k);
+        $scene.appendChild(v);
+        voxels.push(v);
+      }
+    }
+  }
+}
+buildGrid();
+
+/* ---------------------------
+   Rotation & 3D shading
+   --------------------------- */
+
+/* rotation control parameters
+   We keep angles limited so top/front/left are visible */
+const BASE_X = -24;    // pitch (tilt to show top)
+const BASE_Y = -36;    // yaw (favor left & front)
+const AMP_Y  = 12;     // yaw amplitude
+const AMP_X  = 3.2;    // tiny pitch bob
+const SPEED  = 0.86;   // rotation speed multiplier
+
+let running = true;
+let last = performance.now();
+
+/* light vector in world space (direction from surface to light) */
+const lightVec = normalize([0.35, -0.6, 0.75]); // nice top-front-right light
+
+// utility: normalize array
+function normalize(v){
+  const s = Math.hypot(v[0],v[1],v[2]) || 1;
+  return [v[0]/s, v[1]/s, v[2]/s];
+}
+/* rotate vector by rotateX, rotateY, rotateZ (deg) in same order as applied to scene */
+function rotateVec(vec, degX, degY, degZ){
+  const rx = degX * Math.PI/180, ry = degY * Math.PI/180, rz = degZ * Math.PI/180;
+  let [x,y,z] = vec;
+  // rotateX
+  let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+  let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+  let x1 = x;
+  // rotateY
+  let x2 = x1 * Math.cos(ry) + z1 * Math.sin(ry);
+  let z2 = -x1 * Math.sin(ry) + z1 * Math.cos(ry);
+  let y2 = y1;
+  // rotateZ
+  let x3 = x2 * Math.cos(rz) - y2 * Math.sin(rz);
+  let y3 = x2 * Math.sin(rz) + y2 * Math.cos(rz);
+  let z3 = z2;
+  return [x3,y3,z3];
+}
+
+/* face normals in object space */
+const FACE_NORMALS = {
+  front: [0,0,1],
+  back: [0,0,-1],
+  right: [1,0,0],
+  left: [-1,0,0],
+  top: [0,-1,0],
+  bottom: [0,1,0]
+};
+
+/* update shading by rotating normals with current scene rotation and computing dot with light */
+function updateShading(angleX, angleY, angleZ){
+  // for every face type compute brightness factor once
+  const faceFactors = {};
+  for(const face in FACE_NORMALS){
+    const n = FACE_NORMALS[face];
+    // rotate normal by scene rotation
+    const nr = rotateVec(n, angleX, angleY, angleZ);
+    // brightness = clamp(dot(nr, lightVec), 0, 1)
+    const dot = Math.max(0, nr[0]*lightVec[0] + nr[1]*lightVec[1] + nr[2]*lightVec[2]);
+    // convert to visual multiplier [0.35..1.12]
+    const bright = 0.35 + dot * 0.85;
+    faceFactors[face] = bright;
+  }
+  // apply to all voxel faces (optimize: could cache elements by face class)
+  // we will adjust CSS filter brightness and slight box-shadow intensity per face
+  const allFaces = document.querySelectorAll('.face');
+  allFaces.forEach(faceEl => {
+    const classes = faceEl.className.split(' ');
+    let faceName = 'front';
+    for(const c of classes){ if(FACE_NORMALS[c]){ faceName = c; break; } }
+    const f = faceFactors[faceName];
+    // brightness filter and subtle border glow via boxShadow
+    faceEl.style.filter = `brightness(${f}) saturate(${0.9 + (f-0.35)})`;
+    // increase border warmth for gold-feel on left/front faces slightly
+    if(faceName === 'left' || faceName === 'front'){
+      faceEl.style.boxShadow = `0 4px 18px rgba(0,0,0,0.6), 0 0 ${8 + (f*6)}px rgba(255,180,80,${0.06 + (f*0.02)}) inset`;
+    } else {
+      faceEl.style.boxShadow = `0 4px 10px rgba(0,0,0,0.6)`;
+    }
+    // also slightly tweak the opacity to give depth
+    faceEl.style.opacity = (0.82 + (f-0.35)*0.22).toString();
+    // occasionally pulse gold pixels on visible faces based on brightness
+    const golds = faceEl.querySelectorAll('.goldPixel');
+    golds.forEach(g => {
+      if(f > 0.5 && Math.random() > 0.88) { g.classList.add('on'); }
+      else if(Math.random() > 0.995) { g.classList.remove('on'); }
+      // also modulate gold pixel brightness by parent face brightness
+      g.style.opacity = (g.classList.contains('on') ? (0.8 + (f*0.3)) : 0).toString();
+      const glow = Math.min(1.6, 0.7 + f);
+      g.style.boxShadow = `0 0 ${8*glow}px rgba(255,200,80,0.95), 0 0 ${18*glow}px rgba(255,160,40,0.45)`;
+    });
+  });
+}
+
+/* animation loop: compute angles and update shading */
+function animate(now){
+  if(!running) return;
+  const t = (now/1000) * SPEED;
+  const angleY = BASE_Y + AMP_Y * Math.sin(t * 0.85);
+  const angleX = BASE_X + AMP_X * Math.sin(t * 1.15 + 0.4);
+  const angleZ = Math.sin(t * 0.25) * 0.6;
+  // apply transform to scene (this rotates the entire voxel structure)
+  $scene.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) rotateZ(${angleZ}deg)`;
+  // update shading based on these angles
+  updateShading(angleX, angleY, angleZ);
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* Pause / play on click */
+document.querySelector('.stage').addEventListener('click', ()=>{
+  running = !running;
+  if(running) requestAnimationFrame(animate);
+});
+
+/* Helpful: make gold pixels occasionally flicker on visible faces */
+setInterval(()=>{
+  // randomly pick some goldPixel elements and toggle
+  const allGold = document.querySelectorAll('.goldPixel');
+  for(let i=0;i<Math.min(6, allGold.length); i++){
+    const idx = Math.floor(Math.random() * allGold.length);
+    const el = allGold[idx];
+    if(el) {
+      if(Math.random() > 0.55) el.classList.add('on'); else el.classList.remove('on');
+    }
+  }
+}, 900);
+
+/* Prevent huge CPU on very small screens by scaling voxel size and gap */
+function adaptForScreen(){
+  const w = window.innerWidth;
+  if(w < 520){
+    document.documentElement.style.setProperty('--voxel-size', '18px');
+    document.documentElement.style.setProperty('--scene-size', '86vmin');
+    document.documentElement.style.setProperty('--gap', '24px');
+  } else {
+    document.documentElement.style.setProperty('--voxel-size', VOXEL_SIZE + 'px');
+    document.documentElement.style.setProperty('--gap', GAP + 'px');
+  }
+}
+adaptForScreen();
+window.addEventListener('resize', adaptForScreen);
+
+</script>
+</body>
+</html>
