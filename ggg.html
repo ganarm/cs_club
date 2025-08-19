@@ -6,6 +6,7 @@
     <title>CUBE - Computer United Bright Enthusiasts</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -218,6 +219,8 @@
             opacity: 0;
             z-index: 10;
             pointer-events: none;
+            width: 90%;
+            max-width: 800px;
         }
 
         .logo-text h1 {
@@ -246,6 +249,20 @@
             color: #ff00ff;
             text-shadow: 0 0 15px #ff00ff;
             font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .logo-text .college {
+            font-size: 1.5rem;
+            color: #ffff00;
+            text-shadow: 0 0 15px #ffff00;
+            margin-bottom: 5px;
+        }
+
+        .logo-text .course {
+            font-size: 1.3rem;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
         }
 
         .particles {
@@ -359,6 +376,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: titleGlow 2s infinite alternate;
         }
 
         .founders-title span {
@@ -388,11 +406,13 @@
             transform: translateY(50px);
             opacity: 0;
             transition: transform 0.8s ease, opacity 0.8s ease, box-shadow 0.3s ease;
+            animation: cardFloat 6s ease-in-out infinite;
         }
 
         .founder-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            animation: none;
         }
 
         .founder-card.main-founder {
@@ -423,6 +443,7 @@
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
             color: #00ffff;
+            animation: namePulse 3s infinite alternate;
         }
 
         .founder-role {
@@ -581,6 +602,56 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.6); }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes namePulse {
+            0% { 
+                text-shadow: 0 0 10px #00ffff;
+                transform: scale(1);
+            }
+            100% { 
+                text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes foundersBgAnimation {
+            0% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+            50% { 
+                background-position: 100% 50%;
+                opacity: 0.2;
+            }
+            100% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+        }
+
+        .founders-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            animation: foundersBgAnimation 8s ease infinite;
+            opacity: 0.1;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
@@ -612,7 +683,9 @@
         <div class="logo-text" id="logoText">
             <h1>CUBE</h1>
             <p>Computer United Bright Enthusiasts</p>
+            <div class="college">Fergusson College (Autonomous), Pune (new)</div>
             <div class="dept">Department of Computer Science</div>
+            <div class="course">M.Sc. Computer Science (new)</div>
         </div>
 
         <div class="cube-logo-badge" id="cubeLogoBadge">
@@ -620,6 +693,7 @@
         </div>
 
         <div class="founders-section" id="foundersSection">
+            <div class="founders-bg"></div>
             <h2 class="founders-title">The Visionaries Behind <span>CUBE</span></h2>
             <div class="founders-grid">
                 <div class="founder-card main-founder">
@@ -764,6 +838,19 @@
                 }, 100);
             }
 
+            // Show logo text with information
+            function showLogoText() {
+                $('#logoText').css('animation', 'fadeInLogo 3s ease-out forwards');
+                
+                // After 15 seconds, transition to founders
+                setTimeout(function() {
+                    $('#logoText').fadeOut(2000);
+                    $('#bgCubes').fadeOut(2000, function() {
+                        showFounders();
+                    });
+                }, 15000);
+            }
+
             // Show founders section with animation
             function showFounders() {
                 $('#foundersSection').css({
@@ -774,7 +861,7 @@
                 // Animate each founder card with delay
                 $('.founder-card').each(function(index) {
                     $(this).css({
-                        'animation': `fadeInUp 1s ease forwards`,
+                        'animation': `fadeInUp 1s ease forwards, cardFloat 6s ease-in-out infinite ${index * 0.5 + 1}s`,
                         'animation-delay': `${index * 0.3}s`
                     });
                 });
@@ -790,7 +877,7 @@
                 $('#cubeLogoBadge').css('opacity', '1');
             }, 2000);
 
-            // Transform to logo after 10 seconds
+            // Show logo text after 5 seconds
             setTimeout(function() {
                 $('#cubeContainer').fadeOut(2000);
                 $('#binaryStream').fadeOut(1500);
@@ -799,14 +886,9 @@
                 setTimeout(function() {
                     // Create background cubes and show logo
                     createBackgroundCubes();
-                    $('#logoText').css('animation', 'fadeInLogo 3s ease-out forwards');
-                    
-                    // Show founders section after logo is displayed
-                    setTimeout(function() {
-                        showFounders();
-                    }, 3000);
+                    showLogoText();
                 }, 1000);
-            }, 10000);
+            }, 5000);
 
             // Add dynamic lighting effects
             setInterval(function() {
