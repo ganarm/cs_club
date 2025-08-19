@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUBE - Computer United Bright Enthusiasts</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Poppins', 'Arial', sans-serif;
+            perspective: 1000px;
+            color: #fff;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.1) 0%, transparent 50%);
+            animation: backgroundPulse 4s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: 2;
+        }
+
+        /* Cube styling */
+        .cube-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            animation: rotateCube 8s linear infinite;
+            z-index: 5;
+        }
+
+        .cube {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+        }
+
+        .face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3) inset;
+            transition: all 0.3s ease;
+        }
+
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: circuitPattern 3s ease-in-out infinite alternate;
+        }
+
+        .front {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            transform: translateZ(150px);
+            color: #fff;
+        }
+
+        .back {
+            background: linear-gradient(135deg, #ff00ff, #8000ff);
+            transform: translateZ(-150px) rotateY(180deg);
+            color: #fff;
+        }
+
+        .right {
+            background: linear-gradient(135deg, #00ff00, #80ff00);
+            transform: rotateY(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .left {
+            background: linear-gradient(135deg, #ffff00, #ff8000);
+            transform: rotateY(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .top {
+            background: linear-gradient(135deg, #ff0000, #ff0080);
+            transform: rotateX(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .bottom {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            transform: rotateX(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        /* Binary stream */
+        .binary-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .binary-column {
+            position: absolute;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            animation: binaryFall 5s linear infinite;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .binary-digit {
+            display: block;
+            margin: 2px 0;
+            text-shadow: 0 0 8px currentColor;
+            animation: digitPulse 1.5s infinite alternate;
+        }
+
+        .zero {
+            color: #00ffff;
+        }
+
+        .one {
+            color: #ff00ff;
+        }
+
+        /* Logo text styling */
+        .logo-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .logo-text h1 {
+            font-size: 7rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .logo-text p {
+            font-size: 2.2rem;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .logo-text .dept {
+            font-size: 1.8rem;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
+            font-style: italic;
+            margin-top: 20px;
+        }
+
+        /* Founders section */
+        .founders-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            text-align: center;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .founders-title {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .founders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .founder-card {
+            background: rgba(0, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .founder-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+        }
+
+        .founder-card.main-founder {
+            background: rgba(30, 0, 60, 0.7);
+            border: 2px solid rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .founder-card.main-founder::before {
+            background: linear-gradient(90deg, #ff00ff, #ffff00);
+            height: 7px;
+        }
+
+        .founder-name {
+            font-size: 2rem;
+            color: #00ffff;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .founder-role {
+            font-size: 1.2rem;
+            color: #ff00ff;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .founder-status {
+            font-size: 1.1rem;
+            color: #ffff00;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .founder-contact {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .club-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* Particles and effects */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ffff;
+            animation: particleFloat 6s linear infinite;
+        }
+
+        .floating-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .icon {
+            position: absolute;
+            font-size: 30px;
+            color: #00ffff;
+            text-shadow: 0 0 20px currentColor;
+            animation: floatIcon 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .light-trails {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            margin: -200px 0 0 -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 255, 255, 0.1) 70%, transparent 100%);
+            animation: lightTrails 2s ease-in-out infinite alternate;
+            z-index: 0;
+        }
+
+        /* Animations */
+        @keyframes rotateCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes circuitPattern {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes binaryFall {
+            0% { 
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes digitPulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2);
+            }
+        }
+
+        @keyframes lightTrails {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeIn {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            100% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes fadeOut {
+            0% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .logo-text h1 {
+                font-size: 4rem;
+            }
+            
+            .logo-text p {
+                font-size: 1.5rem;
+            }
+            
+            .founders-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .founder-card.main-founder {
+                transform: scale(1);
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="background"></div>
+        <div class="grid"></div>
+        
+        <div class="particles" id="particles"></div>
+        
+        <div class="light-trails"></div>
+        
+        <div class="binary-stream" id="binaryStream"></div>
+        
+        <div class="floating-icons" id="floatingIcons"></div>
+        
+        <div class="cube-container" id="cubeContainer">
+            <div class="cube">
+                <div class="face front">CS</div>
+                <div class="face back">Tech-Sanwad</div>
+                <div class="face right">Tech-Trek</div>
+                <div class="face left">Codium</div>
+                <div class="face top">CUBE</div>
+                <div class="face bottom">Web Development</div>
+            </div>
+        </div>
+        
+        <div class="logo-text" id="logoText">
+            <h1>CUBE</h1>
+            <p>Computer United Bright Enthusiasts</p>
+            <div class="dept">Department of Computer Science</div>
+        </div>
+        
+        <div class="founders-container" id="foundersContainer">
+            <h2 class="founders-title">The Visionaries Behind CUBE</h2>
+            <div class="founders-grid">
+                <div class="founder-card">
+                    <h3 class="founder-name">Yuvraj Sonwane</h3>
+                    <p class="founder-role">Technical Architect</p>
+                    <p class="founder-status">CUBE Founder <span class="club-badge">CUBE</span></p>
+                    <p class="founder-contact"><i class="fas fa-phone"></i> +91 XXXXX XXXXX</p>
+                </div>
+                
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Ganesh Mali</h3>
+                    <p class="founder-role">Chief Visionary</p>
+                    <p class="founder-status">CUBE Main Founder <span class="club-badge">CUBE</span></p>
+                    <p class="founder-contact"><i class="fas fa-phone"></i> +91 XXXXX XXXXX</p>
+                </div>
+                
+                <div class="founder-card">
+                    <h3 class="founder-name">Arin Dhimar</h3>
+                    <p class="founder-role">Creative Director</p>
+                    <p class="founder-status">CUBE Founder <span class="club-badge">CUBE</span></p>
+                    <p class="founder-contact"><i class="fas fa-phone"></i> +91 XXXXX XXXXX</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Create binary stream with colorful digits
+            function createBinaryStream() {
+                const stream = $('#binaryStream');
+                const columns = Math.floor(window.innerWidth / 25);
+                
+                for (let i = 0; i < columns; i++) {
+                    const column = $('<div class="binary-column"></div>');
+                    let binaryHTML = '';
+                    
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
+                    }
+                    
+                    column.html(binaryHTML);
+                    column.css({
+                        left: i * 25 + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (5 + Math.random() * 10) + 's'
+                    });
+                    
+                    stream.append(column);
+                }
+            }
+
+            // Create floating icons
+            function createFloatingIcons() {
+                const icons = ['🤖', '⚡', '💻', '🔬', '🌐', '⚙️', '🚀', '💡'];
+                const container = $('#floatingIcons');
+                
+                icons.forEach((icon, index) => {
+                    const iconElement = $('<div class="icon"></div>');
+                    iconElement.text(icon);
+                    iconElement.css({
+                        top: Math.random() * 80 + 10 + '%',
+                        left: Math.random() * 80 + 10 + '%',
+                        animationDelay: index * 0.5 + 's'
+                    });
+                    container.append(iconElement);
+                });
+            }
+
+            // Create particles
+            function createParticles() {
+                const container = $('#particles');
+                
+                for (let i = 0; i < 100; i++) {
+                    const particle = $('<div class="particle"></div>');
+                    particle.css({
+                        left: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 6 + 's',
+                        animationDuration: (Math.random() * 4 + 4) + 's'
+                    });
+                    container.append(particle);
+                }
+            }
+
+            // Initialize effects
+            createBinaryStream();
+            createFloatingIcons();
+            createParticles();
+
+            // Transform to logo after 10 seconds
+            setTimeout(function() {
+                $('#cubeContainer').fadeOut(2000);
+                $('#binaryStream').fadeOut(1500);
+                $('#floatingIcons').fadeOut(1500);
+                
+                setTimeout(function() {
+                    // Show logo text with animation
+                    $('#logoText').css({
+                        'animation': 'fadeIn 2s ease-out forwards',
+                        'pointer-events': 'auto'
+                    });
+                }, 1000);
+            }, 10000);
+
+            // After showing logo, show founders
+            setTimeout(function() {
+                $('#logoText').css('animation', 'fadeOut 2s ease-out forwards');
+                
+                setTimeout(function() {
+                    $('#foundersContainer').css({
+                        'animation': 'fadeIn 2s ease-out forwards',
+                        'pointer-events': 'auto'
+                    });
+                }, 2000);
+            }, 15000);
+
+            // Add dynamic lighting effects
+            setInterval(function() {
+                $('.face').each(function() {
+                    const randomOpacity = 0.7 + Math.random() * 0.3;
+                    $(this).css('opacity', randomOpacity);
+                });
+            }, 200);
+
+            // Add mouse interaction
+            $(document).mousemove(function(e) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 20;
+                const y = (e.clientY / window.innerHeight - 0.5) * 20;
+                
+                $('#cubeContainer').css('transform', 
+                    `rotateX(${y}deg) rotateY(${x}deg) rotateZ(0deg)`
+                );
+            });
+
+            // Refresh binary stream periodically
+            setInterval(function() {
+                $('.binary-column').each(function() {
+                    let binaryHTML = '';
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
+                    }
+                    $(this).html(binaryHTML);
+                });
+            }, 2000);
+        });
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</body>
+</html>
