@@ -60,13 +60,46 @@
             z-index: 2;
         }
 
-        .cube-container {
+/*         .cube-container {
             position: relative;
             width: 300px;
             height: 300px;
             transform-style: preserve-3d;
             animation: rotateCube 20s linear infinite;
             z-index: 5;
+        } */
+
+        .cube-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            animation: showFaces 24s linear infinite;
+            z-index: 5;
+        }
+
+        @keyframes showFaces {
+            0% {
+                transform: rotateX(0deg) rotateY(0deg);
+            }
+            8.33%, 16.66% {
+                transform: rotateX(0deg) rotateY(-90deg); /* Right face front */
+            }
+            25%, 33.33% {
+                transform: rotateX(0deg) rotateY(-180deg); /* Back face front */
+            }
+            41.66%, 50% {
+                transform: rotateX(0deg) rotateY(-270deg); /* Left face front */
+            }
+            58.33%, 66.66% {
+                transform: rotateX(-90deg) rotateY(0deg); /* Top face front */
+            }
+            75%, 83.33% {
+                transform: rotateX(90deg) rotateY(0deg); /* Bottom face front */
+            }
+            91.66%, 100% {
+                transform: rotateX(0deg) rotateY(-360deg); /* Front face front */
+            }
         }
 
         .cube {
