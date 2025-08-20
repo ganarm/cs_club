@@ -1,0 +1,1022 @@
+v<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUBE - Computer United Bright Enthusiasts</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            perspective: 1000px;
+            color: #fff;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+            animation: backgroundPulse 4s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: 2;
+        }
+
+        .cube-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            animation: rotateCube 20s linear infinite;
+            z-index: 5;
+        }
+
+        .cube {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+        }
+
+        .face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3) inset;
+            transition: all 0.3s ease;
+        }
+
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: circuitPattern 3s ease-in-out infinite alternate;
+        }
+
+        .front {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            transform: translateZ(150px);
+            color: #fff;
+        }
+
+        .back {
+            background: linear-gradient(135deg, #ff00ff, #8000ff);
+            transform: translateZ(-150px) rotateY(180deg);
+            color: #fff;
+        }
+
+        .right {
+            background: linear-gradient(135deg, #00ff00, #80ff00);
+            transform: rotateY(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .left {
+            background: linear-gradient(135deg, #ffff00, #ff8000);
+            transform: rotateY(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .top {
+            background: linear-gradient(135deg, #ff0000, #ff0080);
+            transform: rotateX(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .bottom {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            transform: rotateX(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .binary-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .binary-column {
+            position: absolute;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            animation: binaryFall 5s linear infinite;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .binary-digit {
+            display: block;
+            margin: 2px 0;
+            text-shadow: 0 0 8px currentColor;
+            animation: digitPulse 1.5s infinite alternate;
+        }
+
+        .zero {
+            color: #00ffff;
+        }
+
+        .one {
+            color: #ff00ff;
+        }
+
+        .floating-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .icon {
+            position: absolute;
+            font-size: 30px;
+            color: #00ffff;
+            text-shadow: 0 0 20px currentColor;
+            animation: floatIcon 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .light-trails {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            margin: -200px 0 0 -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 255, 255, 0.1) 70%, transparent 100%);
+            animation: lightTrails 2s ease-in-out infinite alternate;
+            z-index: 0;
+        }
+
+        .logo-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .logo-text h1 {
+            font-size: 5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+
+        .logo-text p {
+            font-size: 1.8rem;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+        }
+
+        .logo-text .dept {
+            font-size: 1.5rem;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .logo-text .college {
+            font-size: 1.5rem;
+            color: #ffff00;
+            text-shadow: 0 0 15px #ffff00;
+            margin-bottom: 5px;
+        }
+
+        .logo-text .course {
+            font-size: 1.3rem;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ffff;
+            animation: particleFloat 6s linear infinite;
+        }
+
+        .bg-cubes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        .bg-cube-container {
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: bgCubeRotate 15s linear infinite;
+        }
+
+        .bg-cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .bg-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset;
+            opacity: 0.7;
+        }
+
+        .bg-front {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateZ(50%);
+        }
+
+        .bg-back {
+            background: rgba(255, 0, 255, 0.2);
+            transform: translateZ(-50%) rotateY(180deg);
+        }
+
+        .bg-right {
+            background: rgba(0, 255, 0, 0.2);
+            transform: rotateY(90deg) translateZ(50%);
+        }
+
+        .bg-left {
+            background: rgba(255, 255, 0, 0.2);
+            transform: rotateY(-90deg) translateZ(50%);
+        }
+
+        .bg-top {
+            background: rgba(255, 0, 0, 0.2);
+            transform: rotateX(90deg) translateZ(50%);
+        }
+
+        .bg-bottom {
+            background: rgba(0, 255, 255, 0.2);
+            transform: rotateX(-90deg) translateZ(50%);
+        }
+
+        /* Founders Section */
+        .founders-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+
+        .founders-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: titleGlow 2s infinite alternate;
+        }
+
+        .founders-title span {
+            font-weight: bold;
+            color: #ff00ff;
+            text-shadow: 0 0 20px #ff00ff;
+        }
+
+        .founders-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            max-width: 1200px;
+            padding: 0 2rem;
+        }
+
+        .founder-card {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease, box-shadow 0.3s ease;
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+
+        .founder-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            animation: none;
+        }
+
+        .founder-card.main-founder {
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            position: relative;
+        }
+
+        .founder-card.main-founder::before {
+            content: 'Main Founder';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .founder-card.main-founder:hover {
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+        }
+
+        .founder-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #00ffff;
+            animation: namePulse 3s infinite alternate;
+        }
+
+        .founder-role {
+            font-size: 1.1rem;
+            color: #ff00ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .founder-club {
+            font-size: 1rem;
+            color: #ffff00;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .founder-contact {
+            font-size: 0.9rem;
+            color: #00ff00;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .founder-contact a {
+            color: #00ff00;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .founder-contact a:hover {
+            color: #ff00ff;
+        }
+
+        .cube-logo-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 25;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+
+        .logo-image {
+            max-width: 500px;
+            width: 80%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 1.5s ease;
+            animation: logoGlow 3s infinite alternate;
+        }
+
+        .logo-title {
+            font-size: 3rem;
+            margin-top: 2rem;
+            text-align: center;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.5s ease;
+        }
+
+        @keyframes rotateCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes circuitPattern {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes binaryFall {
+            0% { 
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes digitPulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2);
+            }
+        }
+
+        @keyframes lightTrails {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInLogo {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            100% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bgCubeRotate {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes fadeInCubes {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            0% { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.6); }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes namePulse {
+            0% { 
+                text-shadow: 0 0 10px #00ffff;
+                transform: scale(1);
+            }
+            100% { 
+                text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes foundersBgAnimation {
+            0% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+            50% { 
+                background-position: 100% 50%;
+                opacity: 0.2;
+            }
+            100% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes logoGlow {
+            0% {
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(0, 255, 255, 0.8);
+                transform: scale(1.02);
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+                transform: scale(0.98);
+            }
+        }
+
+        .founders-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            animation: foundersBgAnimation 8s ease infinite;
+            opacity: 0.1;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="background"></div>
+        <div class="grid"></div>
+        
+        <div class="particles" id="particles"></div>
+        
+        <div class="light-trails"></div>
+        
+        <div class="binary-stream" id="binaryStream"></div>
+        
+        <div class="floating-icons" id="floatingIcons"></div>
+        
+        <div class="cube-container" id="cubeContainer">
+            <div class="cube">
+                <div class="face front">CS</div>
+                <div class="face back">Tech-Sanwad</div>
+                <div class="face right">Tech-Trek</div>
+                <div class="face left">Codium</div>
+                <div class="face top">CUBE</div>
+                <div class="face bottom">Web Dev</div>
+            </div>
+        </div>
+        
+        <div class="bg-cubes" id="bgCubes"></div>
+        
+        <div class="logo-text" id="logoText">
+            <h1>CUBE</h1>
+            <p>Computer United Bright Enthusiasts</p>
+            <div class="college">Fergusson College (Autonomous), Pune (new)</div>
+            <div class="dept">Department of Computer Science</div>
+            <div class="course">M.Sc. Computer Science (new)</div>
+        </div>
+
+        <div class="cube-logo-badge" id="cubeLogoBadge">
+            <i class="fas fa-cube"></i> CUBE CLUB
+        </div>
+
+        <div class="founders-section" id="foundersSection">
+            <div class="founders-bg"></div>
+            <h2 class="founders-title">The Visionaries Behind <span>CUBE</span></h2>
+            <div class="founders-grid">
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Yuvraj Sonwane</h3>
+                    <p class="founder-role">Technical Architect</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 98765 43210<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Ganesh Mali</h3>
+                    <p class="founder-role">Chief Visionary</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 90218 17579<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Arin Dhimar</h3>
+                    <p class="founder-role">Creative Director</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 98765 43210<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="logo-section" id="logoSection">
+            <img src="cube_logo.jpg" alt="CUBE Club Logo" class="logo-image" id="clubLogo">
+            <h2 class="logo-title">Welcome to CUBE Club</h2>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Create binary stream with colorful digits
+            function createBinaryStream() {
+                const stream = $('#binaryStream');
+                const columns = Math.floor(window.innerWidth / 25);
+                
+                for (let i = 0; i < columns; i++) {
+                    const column = $('<div class="binary-column"></div>');
+                    let binaryHTML = '';
+                    
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
+                    }
+                    
+                    column.html(binaryHTML);
+                    column.css({
+                        left: i * 25 + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (5 + Math.random() * 10) + 's'
+                    });
+                    
+                    stream.append(column);
+                }
+            }
+
+            // Create floating icons
+            function createFloatingIcons() {
+                const icons = ['🤖', '⚡', '💻', '🔬', '🌐', '⚙️', '🚀', '💡'];
+                const container = $('#floatingIcons');
+                
+                icons.forEach((icon, index) => {
+                    const iconElement = $('<div class="icon"></div>');
+                    iconElement.text(icon);
+                    iconElement.css({
+                        top: Math.random() * 80 + 10 + '%',
+                        left: Math.random() * 80 + 10 + '%',
+                        animationDelay: index * 0.5 + 's'
+                    });
+                    container.append(iconElement);
+                });
+            }
+
+            // Create particles
+            function createParticles() {
+                const container = $('#particles');
+                
+                for (let i = 0; i < 100; i++) {
+                    const particle = $('<div class="particle"></div>');
+                    particle.css({
+                        left: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 6 + 's',
+                        animationDuration: (Math.random() * 4 + 4) + 's'
+                    });
+                    container.append(particle);
+                }
+            }
+            
+            // Create background cubes
+            function createBackgroundCubes() {
+                const container = $('#bgCubes');
+                const count = 20;
+                
+                for (let i = 0; i < count; i++) {
+                    const size = 30 + Math.random() * 70;
+                    const cubeContainer = $('<div class="bg-cube-container"></div>');
+                    const cube = $('<div class="bg-cube"></div>');
+                    
+                    cubeContainer.css({
+                        top: Math.random() * 100 + '%',
+                        left: Math.random() * 100 + '%',
+                        width: size + 'px',
+                        height: size + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (10 + Math.random() * 20) + 's'
+                    });
+                    
+                    // Create cube faces
+                    const faces = [
+                        $('<div class="bg-face bg-front"></div>'),
+                        $('<div class="bg-face bg-back"></div>'),
+                        $('<div class="bg-face bg-right"></div>'),
+                        $('<div class="bg-face bg-left"></div>'),
+                        $('<div class="bg-face bg-top"></div>'),
+                        $('<div class="bg-face bg-bottom"></div>')
+                    ];
+                    
+                    // Position faces
+                    faces[0].css('transform', `translateZ(${size/2}px)`);
+                    faces[1].css('transform', `translateZ(-${size/2}px) rotateY(180deg)`);
+                    faces[2].css('transform', `rotateY(90deg) translateZ(${size/2}px)`);
+                    faces[3].css('transform', `rotateY(-90deg) translateZ(${size/2}px)`);
+                    faces[4].css('transform', `rotateX(90deg) translateZ(${size/2}px)`);
+                    faces[5].css('transform', `rotateX(-90deg) translateZ(${size/2}px)`);
+                    
+                    // Add faces to cube
+                    faces.forEach(face => cube.append(face));
+                    
+                    // Add cube to container
+                    cubeContainer.append(cube);
+                    container.append(cubeContainer);
+                }
+                
+                // Fade in background cubes
+                setTimeout(() => {
+                    container.css('opacity', 1);
+                }, 100);
+            }
+
+            // Show logo text with information
+            function showLogoText() {
+                $('#logoText').css('animation', 'fadeInLogo 3s ease-out forwards');
+                
+                // After 10 seconds, transition to founders
+                setTimeout(function() {
+                    $('#logoText').fadeOut(2000);
+                    $('#bgCubes').fadeOut(2000, function() {
+                        showFounders();
+                    });
+                }, 10000);
+            }
+
+            // Show founders section with animation
+            function showFounders() {
+                $('#foundersSection').css({
+                    'opacity': '1',
+                    'pointer-events': 'all'
+                });
+                
+                // Animate each founder card with delay
+                $('.founder-card').each(function(index) {
+                    $(this).css({
+                        'animation': `fadeInUp 1s ease forwards, cardFloat 6s ease-in-out infinite ${index * 0.5 + 1}s`,
+                        'animation-delay': `${index * 0.3}s`
+                    });
+                });
+                
+                // After 10 seconds, transition to logo
+                setTimeout(function() {
+                    $('#foundersSection').fadeOut(2000, function() {
+                        showClubLogo();
+                    });
+                }, 10000);
+            }
+
+            // Show club logo with animation
+            function showClubLogo() {
+                $('#logoSection').css({
+                    'opacity': '1',
+                    'pointer-events': 'all'
+                });
+                
+                // Animate the logo
+                setTimeout(function() {
+                    $('#clubLogo').css({
+                        'opacity': '1',
+                        'transform': 'scale(1)'
+                    });
+                    
+                    // Animate the title
+                    setTimeout(function() {
+                        $('.logo-title').css({
+                            'opacity': '1',
+                            'transform': 'translateY(0)'
+                        });
+                    }, 1000);
+                }, 500);
+            }
+
+            // Initialize effects
+            createBinaryStream();
+            createFloatingIcons();
+            createParticles();
+
+            // Show CUBE badge after 2 seconds
+            setTimeout(function() {
+                $('#cubeLogoBadge').css('opacity', '1');
+            }, 2000);
+
+            // Show logo text after 20 seconds (cube rotation time)
+            setTimeout(function() {
+                $('#cubeContainer').fadeOut(2000);
+                $('#binaryStream').fadeOut(1500);
+                $('#floatingIcons').fadeOut(1500);
+                
+                setTimeout(function() {
+                    // Create background cubes and show logo
+                    createBackgroundCubes();
+                    showLogoText();
+                }, 1000);
+            }, 20000);
+
+            // Add dynamic lighting effects
+            setInterval(function() {
+                $('.face').each(function() {
+                    const randomOpacity = 0.7 + Math.random() * 0.3;
+                    $(this).css('opacity', randomOpacity);
+                });
+            }, 200);
+
+            // Add mouse interaction
+            $(document).mousemove(function(e) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 20;
+                const y = (e.clientY / window.innerHeight - 0.5) * 20;
+                
+                $('#cubeContainer').css('transform', 
+                    `rotateX(${y}deg) rotateY(${x}deg) rotateZ(0deg)`
+                );
+            });
+
+            // Refresh binary stream periodically
+            setInterval(function() {
+                $('.binary-column').each(function() {
+                    let binaryHTML = '';
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
+                    }
+                    $(this).html(binaryHTML);
+                });
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
