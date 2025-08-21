@@ -3,636 +3,1139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUBE - Futuristic Tech Experience</title>
+    <title>CUBE - Computer United Bright Enthusiasts</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             background: #000;
             overflow: hidden;
-            height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
             perspective: 1000px;
+            color: #fff;
         }
-        
-        .scene {
+
+        .container {
             position: relative;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #0a0a2a 0%, #000 70%);
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
-        
-        .grid-overlay {
+
+        .background {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: 
-                linear-gradient(rgba(0, 100, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 100, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+            animation: backgroundPulse 4s ease-in-out infinite alternate;
             z-index: 1;
         }
-        
+
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: 2;
+        }
+
+        .cube-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            animation: rotateCube 15s linear infinite;
+            z-index: 5;
+        }
+
+
+        .cube {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+        }
+
+        .face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3) inset;
+            transition: all 0.3s ease;
+        }
+
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: circuitPattern 3s ease-in-out infinite alternate;
+        }
+
+        .front {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            transform: translateZ(150px);
+            color: #fff;
+        }
+
+        .back {
+            background: linear-gradient(135deg, #ff00ff, #8000ff);
+            transform: translateZ(-150px) rotateY(180deg);
+            color: #fff;
+        }
+
+        .right {
+            background: linear-gradient(135deg, #00ff00, #80ff00);
+            transform: rotateY(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .left {
+            background: linear-gradient(135deg, #ffff00, #ff8000);
+            transform: rotateY(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .top {
+            background: linear-gradient(135deg, #ff0000, #ff0080);
+            transform: rotateX(90deg) translateZ(150px);
+            color: #fff;
+        }
+
+        .bottom {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            transform: rotateX(-90deg) translateZ(150px);
+            color: #fff;
+        }
+
         .binary-stream {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            color: rgba(0, 255, 150, 0.3);
-            font-size: 16px;
-            font-family: monospace;
-            z-index: 2;
+            pointer-events: none;
+            z-index: 3;
         }
-        
+
         .binary-column {
             position: absolute;
             top: -100px;
-            animation: fall linear infinite;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            animation: binaryFall 5s linear infinite;
+            opacity: 0.8;
+            text-align: center;
         }
-        
-        @keyframes fall {
-            to { transform: translateY(100vh); }
+
+        .binary-digit {
+            display: block;
+            margin: 2px 0;
+            text-shadow: 0 0 8px currentColor;
+            animation: digitPulse 1.5s infinite alternate;
         }
-        
-        .network-lines {
+
+        .zero {
+            color: #00ffff;
+        }
+
+        .one {
+            color: #ff00ff;
+        }
+
+        .floating-icons {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 3;
+            pointer-events: none;
+            z-index: 4;
         }
-        
-        .line {
+
+        .icon {
             position: absolute;
-            background: rgba(0, 200, 255, 0.1);
-            transform-origin: left center;
+            font-size: 30px;
+            color: #00ffff;
+            text-shadow: 0 0 20px currentColor;
+            animation: floatIcon 4s ease-in-out infinite;
+            opacity: 0;
         }
-        
-        .cube-container {
+
+        .light-trails {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
             width: 400px;
             height: 400px;
-            transform-style: preserve-3d;
-            z-index: 10;
-        }
-        
-        .cube {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transform: rotateX(-20deg) rotateY(25deg);
-            animation: rotate 25s infinite linear;
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotateX(-20deg) rotateY(0deg); }
-            100% { transform: rotateX(-20deg) rotateY(360deg); }
-        }
-        
-        .face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 0 50px rgba(0, 255, 255, 0.2), 
-                        0 0 30px rgba(0, 200, 255, 0.5);
-            opacity: 0.9;
-            overflow: hidden;
-        }
-        
-        .face::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%),
-                linear-gradient(-45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%);
-            background-size: 20px 20px;
-            opacity: 0.4;
-        }
-        
-        .face-text {
-            position: relative;
-            font-size: 50px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            color: white;
-            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
-            z-index: 2;
-        }
-        
-        .front  { transform: translateZ(200px); }
-        .back   { transform: rotateY(180deg) translateZ(200px); }
-        .right  { transform: rotateY(90deg) translateZ(200px); }
-        .left   { transform: rotateY(-90deg) translateZ(200px); }
-        .top    { transform: rotateX(90deg) translateZ(200px); }
-        .bottom { transform: rotateX(-90deg) translateZ(200px); }
-        
-        .front  { background: linear-gradient(135deg, rgba(0, 100, 255, 0.8), rgba(0, 50, 150, 0.5)); }
-        .back   { background: linear-gradient(135deg, rgba(0, 200, 100, 0.8), rgba(0, 100, 50, 0.5)); }
-        .right  { background: linear-gradient(135deg, rgba(150, 0, 255, 0.8), rgba(75, 0, 150, 0.5)); }
-        .left   { background: linear-gradient(135deg, rgba(255, 200, 0, 0.8), rgba(200, 150, 0, 0.5)); }
-        .top    { background: linear-gradient(135deg, rgba(255, 50, 50, 0.8), rgba(200, 0, 0, 0.5)); }
-        .bottom { background: linear-gradient(135deg, rgba(0, 200, 255, 0.8), rgba(0, 100, 200, 0.5)); }
-        
-        .front .face-text  { color: #00aaff; }
-        .back .face-text   { color: #00ff99; }
-        .right .face-text  { color: #bb00ff; }
-        .left .face-text   { color: #ffcc00; }
-        .top .face-text    { color: #ff3366; }
-        .bottom .face-text { color: #00ffff; }
-        
-        .light-trail {
-            position: absolute;
-            width: 120%;
-            height: 120%;
+            margin: -200px 0 0 -200px;
             border-radius: 50%;
-            filter: blur(40px);
-            z-index: 5;
-            opacity: 0.5;
-            animation: pulse 4s infinite alternate;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 255, 255, 0.1) 70%, transparent 100%);
+            animation: lightTrails 2s ease-in-out infinite alternate;
+            z-index: 0;
         }
-        
-        @keyframes pulse {
-            0% { opacity: 0.3; transform: scale(0.95); }
-            100% { opacity: 0.7; transform: scale(1.05); }
-        }
-        
-        .blue-trail { background: radial-gradient(circle, rgba(0, 100, 255, 0.8), transparent 70%); }
-        .green-trail { background: radial-gradient(circle, rgba(0, 255, 150, 0.8), transparent 70%); }
-        .purple-trail { background: radial-gradient(circle, rgba(150, 0, 255, 0.8), transparent 70%); }
-        .gold-trail { background: radial-gradient(circle, rgba(255, 200, 0, 0.8), transparent 70%); }
-        .red-trail { background: radial-gradient(circle, rgba(255, 50, 50, 0.8), transparent 70%); }
-        .cyan-trail { background: radial-gradient(circle, rgba(0, 200, 255, 0.8), transparent 70%); }
-        
-        .hologram {
-            position: absolute;
-            font-size: 30px;
-            color: rgba(255, 255, 255, 0.7);
-            text-shadow: 0 0 15px rgba(0, 200, 255, 0.8);
-            z-index: 4;
-            animation: float 6s infinite ease-in-out;
-            filter: drop-shadow(0 0 5px currentColor);
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translate(10px, -20px) rotate(5deg); opacity: 1; }
-        }
-        
-        .logo {
+
+        .logo-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            z-index: 20;
+            color: #fff;
             opacity: 0;
+            z-index: 10;
             pointer-events: none;
-            transition: opacity 2s;
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
         }
-        
-        .logo h1 {
-            font-size: 90px;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, cyan, gold, magenta, cyan);
+
+        .logo-text h1 {
+            font-size: 6rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
             -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
-            letter-spacing: 10px;
-            animation: shine 3s infinite;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+            letter-spacing: 3px;
         }
-        
-        @keyframes shine {
-            0% { background-position: -500%; }
-            100% { background-position: 500%; }
-        }
-        
-        .logo h2 {
-            font-size: 32px;
-            color: white;
-            font-weight: 300;
+
+        .logo-text p {
+            font-size: 2rem;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
             margin-bottom: 10px;
-            text-shadow: 0 0 10px cyan;
-            letter-spacing: 2px;
         }
-        
-        .logo h3 {
-            font-size: 24px;
-            color: #aaa;
-            font-weight: 300;
+
+        .acronym-letter {
+            animation: neonGlow 1.5s infinite alternate;
+        }
+
+        .acronym-letter.c {
+            color: #00ffff;
+        }
+
+        .acronym-letter.u {
+            color: #ff00ff;
+        }
+
+        .acronym-letter.b {
+            color: #ffff00;
+        }
+
+        .acronym-letter.e {
+            color: #00ff00;
+        }
+
+        .logo-text .dept {
+            font-size: 1.8rem;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
             font-style: italic;
-            text-shadow: 0 0 5px cyan;
+            margin-bottom: 10px;
+            font-weight: bold;
+            animation: neonGlow 1.5s infinite alternate;
         }
-        
+
+        .logo-text .college {
+            font-size: 1.8rem;
+            color: #ffff00;
+            text-shadow: 0 0 15px #ffff00;
+            margin-bottom: 5px;
+            font-weight: bold;
+            animation: neonGlow 1.5s infinite alternate;
+        }
+
+        .logo-text .course {
+            font-size: 1.6rem;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
+            font-weight: bold;
+            animation: neonGlow 1.5s infinite alternate;
+        }
+
         .particles {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            pointer-events: none;
+            z-index: 3;
         }
-        
+
         .particle {
             position: absolute;
-            width: 3px;
-            height: 3px;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
             border-radius: 50%;
-            background: white;
-            box-shadow: 0 0 10px cyan;
-            animation: sparkle 2s infinite;
+            box-shadow: 0 0 10px #00ffff;
+            animation: particleFloat 6s linear infinite;
         }
-        
-        @keyframes sparkle {
-            0%, 100% { opacity: 0; transform: scale(0.5); }
-            50% { opacity: 1; transform: scale(1.5); }
-        }
-        
-        .spotlight {
+
+        .bg-cubes {
             position: absolute;
-            width: 150%;
-            height: 150%;
-            top: -25%;
-            left: -25%;
-            background: radial-gradient(circle at center, rgba(0, 100, 255, 0.2) 0%, transparent 60%);
-            z-index: 0;
-            animation: spotlight-move 15s infinite alternate;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 2s ease;
         }
-        
-        @keyframes spotlight-move {
-            0% { transform: translateX(-10%) rotate(10deg); }
-            100% { transform: translateX(10%) rotate(-10deg); }
-        }
-        
-        .controls {
+
+        .bg-cube-container {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 100;
-            color: white;
-            font-size: 14px;
-            opacity: 0.7;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 15px;
-            border-radius: 20px;
+            transform-style: preserve-3d;
+            animation: bgCubeRotate 15s linear infinite;
         }
-        
-        .circuit-pattern {
+
+        .bg-cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .bg-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: 
-                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 2px),
-                radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 2px);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px;
-            z-index: 1;
-            opacity: 0.4;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset;
+            opacity: 0.7;
         }
-        
-        .circuit-line {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            transform-origin: left center;
+
+        .bg-front {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateZ(50%);
         }
-        
-        .circuit-node {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+
+        .bg-back {
+            background: rgba(255, 0, 255, 0.2);
+            transform: translateZ(-50%) rotateY(180deg);
         }
-        
-        .audio-control {
+
+        .bg-right {
+            background: rgba(0, 255, 0, 0.2);
+            transform: rotateY(90deg) translateZ(50%);
+        }
+
+        .bg-left {
+            background: rgba(255, 255, 0, 0.2);
+            transform: rotateY(-90deg) translateZ(50%);
+        }
+
+        .bg-top {
+            background: rgba(255, 0, 0, 0.2);
+            transform: rotateX(90deg) translateZ(50%);
+        }
+
+        .bg-bottom {
+            background: rgba(0, 255, 255, 0.2);
+            transform: rotateX(-90deg) translateZ(50%);
+        }
+
+        /* Founders Section */
+        .founders-section {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            color: white;
-            background: rgba(0, 0, 0, 0.5);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
+            align-items: center;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+
+        .founders-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: titleGlow 2s infinite alternate;
+        }
+
+        .founders-title span {
+            font-weight: bold;
+            color: #ff00ff;
+            text-shadow: 0 0 20px #ff00ff;
+        }
+
+        .founders-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            max-width: 1200px;
+            padding: 0 2rem;
+        }
+
+        .founder-card {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease, box-shadow 0.3s ease;
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+
+        .founder-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            animation: none;
+        }
+
+        .founder-card.main-founder {
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            position: relative;
+        }
+
+        .founder-card.main-founder::before {
+            content: 'Founder';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .founder-card.main-founder:hover {
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+        }
+
+        .founder-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #00ffff;
+            animation: namePulse 3s infinite alternate;
+        }
+
+        .founder-role {
+            font-size: 1.1rem;
+            color: #ff00ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .founder-club {
+            font-size: 1rem;
+            color: #ffff00;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .founder-contact {
+            font-size: 0.9rem;
+            color: #00ff00;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .founder-contact a {
+            color: #00ff00;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .founder-contact a:hover {
+            color: #ff00ff;
+        }
+
+        .cube-logo-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 25;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+
+        .logo-image {
+            max-width: 500px;
+            width: 80%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 1.5s ease;
+            animation: logoGlow 3s infinite alternate;
+        }
+
+        .logo-title {
+            font-size: 3rem;
+            margin-top: 2rem;
+            text-align: center;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.5s ease;
+        }
+
+        /* Thank Message */
+        .thank-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .thank-message h1 {
+            font-size: 4rem;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .thank-message p {
+            font-size: 2rem;
+            color: #ffff00;
+            text-shadow: 0 0 15px #ffff00;
+        }
+
+        @keyframes rotateCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes circuitPattern {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes binaryFall {
+            0% { 
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { 
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes digitPulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2);
+            }
+        }
+
+        @keyframes lightTrails {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInLogo {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            100% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bgCubeRotate {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        @keyframes fadeInCubes {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            0% { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.6); }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes namePulse {
+            0% { 
+                text-shadow: 0 0 10px #00ffff;
+                transform: scale(1);
+            }
+            100% { 
+                text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes foundersBgAnimation {
+            0% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+            50% { 
+                background-position: 100% 50%;
+                opacity: 0.2;
+            }
+            100% { 
+                background-position: 0% 50%;
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes logoGlow {
+            0% {
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(0, 255, 255, 0.8);
+                transform: scale(1.02);
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+                transform: scale(0.98);
+            }
+        }
+
+        @keyframes neonGlow {
+            0% {
+                text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+            }
+           100% {
+                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+            }
+        }
+
+        .founders-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            animation: foundersBgAnimation 8s ease infinite;
+            opacity: 0.1;
+            z-index: -1;
         }
     </style>
 </head>
 <body>
-    <div class="scene">
-        <div class="grid-overlay"></div>
-        <div class="binary-stream"></div>
-        <div class="network-lines"></div>
-        <div class="particles"></div>
-        <div class="spotlight"></div>
+    <div class="container">
+        <div class="background"></div>
+        <div class="grid"></div>
         
-        <div class="cube-container">
-            <div class="light-trail blue-trail"></div>
-            <div class="light-trail green-trail"></div>
-            <div class="light-trail red-trail"></div>
-            <div class="light-trail purple-trail"></div>
-            <div class="light-trail gold-trail"></div>
-            <div class="light-trail cyan-trail"></div>
-            
+        <div class="particles" id="particles"></div>
+        
+        <div class="light-trails"></div>
+        
+        <div class="binary-stream" id="binaryStream"></div>
+        
+        <div class="floating-icons" id="floatingIcons"></div>
+        
+        <div class="cube-container" id="cubeContainer">
             <div class="cube">
-                <div class="face front">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">Tech</div>
-                </div>
-                <div class="face back">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">Unity</div>
-                </div>
-                <div class="face right">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">Create</div>
-                </div>
-                <div class="face left">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">Innovate</div>
-                </div>
-                <div class="face top">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">Code</div>
-                </div>
-                <div class="face bottom">
-                    <div class="circuit-pattern"></div>
-                    <div class="face-text">AI</div>
-                </div>
+                <div class="face front">Tech-संवाद</div>
+                <div class="face back">Artificial Intelligence</div>
+                <div class="face right">Tech-Trek</div>
+                <div class="face left">Security & Cryptography</div>
+                <div class="face top">Data Analytics</div>
+                <div class="face bottom">Codium</div>
             </div>
         </div>
         
-        <div class="logo">
+        <div class="bg-cubes" id="bgCubes"></div>
+        
+        <div class="logo-text" id="logoText">
             <h1>CUBE</h1>
-            <h2>Computer United Bright Enthusiasts</h2>
-            <h3>Department of Computer Science</h3>
+            <p><span class="acronym-letter c">C</span>omputer <span class="acronym-letter u">U</span>nited <span class="acronym-letter b">B</span>right <span class="acronym-letter e">E</span>nthusiasts</p>
+            <div class="college">Fergusson College (Autonomous), Pune</div>
+            <div class="dept">Department of Computer Science</div>
+            <div class="course">M.Sc. Computer Science</div>
         </div>
-        
-        <div class="controls">Click to show/hide logo | Drag to rotate cube</div>
-        <div class="audio-control">
-            <i class="fas fa-volume-up"></i>
+
+        <div class="cube-logo-badge" id="cubeLogoBadge">
+            <i class="fas fa-cube"></i> CUBE 
         </div>
-        
-        <audio id="background-sound" loop>
-            <source src="https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-ambience-loop-360.mp3" type="audio/mpeg">
-        </audio>
+
+        <div class="founders-section" id="foundersSection">
+            <div class="founders-bg"></div>
+            <h2 class="founders-title">The Visionaries Behind <span>CUBE</span></h2>
+            <div class="founders-grid">
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Yuvraj Sonwane</h3>
+                    <p class="founder-role">Technical Architect</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 92700 10103<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Ganesh Mali</h3>
+                    <p class="founder-role">Chief Visionary</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 90218 17579<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Arin Dhimar</h3>
+                    <p class="founder-role">Creative Director</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        <i class="fas fa-phone"></i> +91 81405 96671<br>
+                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Amol Ingole</h3>
+                    <p class="founder-role">Founder</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        Contact details not available
+                    </p>
+                </div>
+                <div class="founder-card main-founder">
+                    <h3 class="founder-name">Sharayu Sutar</h3>
+                    <p class="founder-role">Founder</p>
+                    <p class="founder-club">CUBE Founder</p>
+                    <p class="founder-contact">
+                        Contact details not available
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="logo-section" id="logoSection">
+            <img src="https://via.placeholder.com/500x300/0000FF/808080?text=CUBE+LOGO" alt="CUBE Club Logo" class="logo-image" id="clubLogo">
+            <h2 class="logo-title">Welcome to CUBE: M.Sc. CS Club </h2>
+        </div>
+
+        <!-- Thank Message -->
+        <div class="thank-message" id="thankMessage">
+            <h1>Thank You!</h1>
+            <p>We appreciate your interest in CUBE.</p>
+        </div>
     </div>
 
     <script>
         $(document).ready(function() {
-            // Create binary streams
-            function createBinaryStreams() {
-                const binaryStream = $('.binary-stream');
-                const columns = Math.floor(window.innerWidth / 30);
+            // Create binary stream with colorful digits
+            function createBinaryStream() {
+                const stream = $('#binaryStream');
+                const columns = Math.floor(window.innerWidth / 25);
                 
                 for (let i = 0; i < columns; i++) {
-                    const col = $('<div class="binary-column"></div>');
-                    col.css({
-                        left: `${(i / columns) * 100}%`,
-                        animationDuration: `${Math.random() * 10 + 10}s`,
-                        animationDelay: `${Math.random() * 5}s`
-                    });
+                    const column = $('<div class="binary-column"></div>');
+                    let binaryHTML = '';
                     
-                    // Create characters in the column
-                    const charCount = Math.floor(window.innerHeight / 20);
-                    for (let j = 0; j < charCount; j++) {
-                        const char = Math.random() > 0.5 ? '0' : '1';
-                        const opacity = Math.random() * 0.5 + 0.1;
-                        const hue = Math.random() * 360;
-                        col.append(`<div style="opacity:${opacity}; color:hsl(${hue}, 100%, 70%);">${char}</div>`);
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
                     }
                     
-                    binaryStream.append(col);
-                }
-            }
-            
-            // Create network lines
-            function createNetworkLines() {
-                const networkLines = $('.network-lines');
-                const lineCount = 30;
-                
-                for (let i = 0; i < lineCount; i++) {
-                    const line = $('<div class="line"></div>');
-                    const length = Math.random() * 200 + 50;
-                    const angle = Math.random() * 360;
-                    const left = Math.random() * window.innerWidth;
-                    const top = Math.random() * window.innerHeight;
-                    const duration = Math.random() * 5 + 5;
-                    const hue = Math.random() * 360;
-                    
-                    line.css({
-                        width: `${length}px`,
-                        transform: `rotate(${angle}deg)`,
-                        left: `${left}px`,
-                        top: `${top}px`,
-                        animation: `pulse ${duration}s infinite`,
-                        opacity: Math.random() * 0.3,
-                        background: `linear-gradient(to right, hsla(${hue}, 100%, 50%, 0.3), transparent)`
+                    column.html(binaryHTML);
+                    column.css({
+                        left: i * 25 + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (5 + Math.random() * 10) + 's'
                     });
                     
-                    networkLines.append(line);
+                    stream.append(column);
                 }
             }
-            
-            // Create holographic icons
-            function createHolograms() {
-                const icons = [
-                    '<i class="fas fa-microchip"></i>',
-                    '<i class="fas fa-brain"></i>',
-                    '<i class="fas fa-code"></i>',
-                    '<i class="fas fa-network-wired"></i>',
-                    '<i class="fas fa-server"></i>',
-                    '<i class="fas fa-robot"></i>',
-                    '<i class="fas fa-cloud"></i>',
-                    '<i class="fas fa-database"></i>',
-                    '<i class="fas fa-laptop-code"></i>',
-                    '<i class="fas fa-cogs"></i>'
-                ];
+
+            // Create floating icons
+            function createFloatingIcons() {
+                const icons = ['🤖', '⚡', '💻', '🔬', '🌐', '⚙️', '🚀', '💡'];
+                const container = $('#floatingIcons');
                 
-                const colors = ['#00ffff', '#ff00ff', '#00ff99', '#ffcc00', '#ff3366', '#bb00ff'];
-                
-                for (let i = 0; i < 20; i++) {
-                    const icon = icons[Math.floor(Math.random() * icons.length)];
-                    const hologram = $(`<div class="hologram">${icon}</div>`);
-                    const color = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    hologram.css({
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                        fontSize: `${Math.random() * 20 + 20}px`,
-                        animationDelay: `${Math.random() * 5}s`,
-                        color: color
+                icons.forEach((icon, index) => {
+                    const iconElement = $('<div class="icon"></div>');
+                    iconElement.text(icon);
+                    iconElement.css({
+                        top: Math.random() * 80 + 10 + '%',
+                        left: Math.random() * 80 + 10 + '%',
+                        animationDelay: index * 0.5 + 's'
                     });
-                    
-                    $('.scene').append(hologram);
-                }
-            }
-            
-            // Create particles
-            function createParticles() {
-                const particles = $('.particles');
-                const particleCount = 200;
-                
-                for (let i = 0; i < particleCount; i++) {
-                    const particle = $('<div class="particle"></div>');
-                    const hue = Math.random() * 360;
-                    
-                    particle.css({
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                        animationDelay: `${Math.random() * 2}s`,
-                        background: `hsl(${hue}, 100%, 70%)`,
-                        boxShadow: `0 0 10px hsl(${hue}, 100%, 70%)`
-                    });
-                    
-                    particles.append(particle);
-                }
-            }
-            
-            // Create circuit patterns on cube faces
-            function createCircuitPatterns() {
-                $('.face').each(function() {
-                    const face = $(this);
-                    const color = face.find('.face-text').css('color');
-                    
-                    // Create circuit nodes
-                    for (let i = 0; i < 20; i++) {
-                        const node = $('<div class="circuit-node"></div>');
-                        node.css({
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            background: color,
-                            boxShadow: `0 0 10px ${color}`
-                        });
-                        face.append(node);
-                    }
-                    
-                    // Create circuit lines
-                    for (let i = 0; i < 10; i++) {
-                        const line = $('<div class="circuit-line"></div>');
-                        const length = Math.random() * 200 + 50;
-                        const angle = Math.random() * 360;
-                        const left = Math.random() * 100;
-                        const top = Math.random() * 100;
-                        
-                        line.css({
-                            width: `${length}px`,
-                            transform: `rotate(${angle}deg)`,
-                            left: `${left}%`,
-                            top: `${top}%`,
-                            height: '2px',
-                            background: color,
-                            boxShadow: `0 0 5px ${color}`
-                        });
-                        
-                        face.append(line);
-                    }
+                    container.append(iconElement);
                 });
             }
-            
-            // Initialize all effects
-            createBinaryStreams();
-            createNetworkLines();
-            createHolograms();
-            createParticles();
-            createCircuitPatterns();
-            
-            // Logo toggle
-            let logoVisible = false;
-            $(document).on('click', function() {
-                logoVisible = !logoVisible;
-                $('.logo').css('opacity', logoVisible ? 1 : 0);
-            });
-            
-            // Interactive cube rotation
-            let isDragging = false;
-            let lastX, lastY;
-            let rotationX = -20;
-            let rotationY = 25;
-            
-            $(document).on('mousedown touchstart', function(e) {
-                isDragging = true;
-                lastX = e.clientX || e.originalEvent.touches[0].clientX;
-                lastY = e.clientY || e.originalEvent.touches[0].clientY;
-                $('.cube').css('animation', 'none');
-                e.preventDefault();
-            });
-            
-            $(document).on('mousemove touchmove', function(e) {
-                if (!isDragging) return;
+
+            // Create particles
+            function createParticles() {
+                const container = $('#particles');
                 
-                const x = e.clientX || e.originalEvent.touches[0].clientX;
-                const y = e.clientY || e.originalEvent.touches[0].clientY;
-                
-                const deltaX = x - lastX;
-                const deltaY = y - lastY;
-                
-                rotationY += deltaX * 0.5;
-                rotationX -= deltaY * 0.5;
-                
-                $('.cube').css('transform', `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`);
-                
-                lastX = x;
-                lastY = y;
-                e.preventDefault();
-            });
-            
-            $(document).on('mouseup touchend', function() {
-                isDragging = false;
-            });
-            
-            // Auto show logo after 5 seconds
-            setTimeout(function() {
-                $('.logo').css('opacity', 1);
-                logoVisible = true;
-            }, 5000);
-            
-            // Audio control
-            const audio = document.getElementById('background-sound');
-            const audioControl = $('.audio-control');
-            
-            audioControl.on('click', function() {
-                if (audio.paused) {
-                    audio.play();
-                    $(this).html('<i class="fas fa-volume-up"></i>');
-                } else {
-                    audio.pause();
-                    $(this).html('<i class="fas fa-volume-mute"></i>');
+                for (let i = 0; i < 100; i++) {
+                    const particle = $('<div class="particle"></div>');
+                    particle.css({
+                        left: Math.random() * 100 + '%',
+                        animationDelay: Math.random() * 6 + 's',
+                        animationDuration: (Math.random() * 4 + 4) + 's'
+                    });
+                    container.append(particle);
                 }
-            });
+            }
             
-            // Try to play audio on user interaction
-            $(document).one('click', function() {
-                audio.play().catch(e => console.log("Audio play failed:", e));
+            // Create background cubes
+            function createBackgroundCubes() {
+                const container = $('#bgCubes');
+                const count = 20;
+                
+                for (let i = 0; i < count; i++) {
+                    const size = 30 + Math.random() * 70;
+                    const cubeContainer = $('<div class="bg-cube-container"></div>');
+                    const cube = $('<div class="bg-cube"></div>');
+                    
+                    cubeContainer.css({
+                        top: Math.random() * 100 + '%',
+                        left: Math.random() * 100 + '%',
+                        width: size + 'px',
+                        height: size + 'px',
+                        animationDelay: Math.random() * 5 + 's',
+                        animationDuration: (10 + Math.random() * 20) + 's'
+                    });
+                    
+                    // Create cube faces
+                    const faces = [
+                        $('<div class="bg-face bg-front"></div>'),
+                        $('<div class="bg-face bg-back"></div>'),
+                        $('<div class="bg-face bg-right"></div>'),
+                        $('<div class="bg-face bg-left"></div>'),
+                        $('<div class="bg-face bg-top"></div>'),
+                        $('<div class="bg-face bg-bottom"></div>')
+                    ];
+                    
+                    // Position faces
+                    faces[0].css('transform', `translateZ(${size/2}px)`);
+                    faces[1].css('transform', `translateZ(-${size/2}px) rotateY(180deg)`);
+                    faces[2].css('transform', `rotateY(90deg) translateZ(${size/2}px)`);
+                    faces[3].css('transform', `rotateY(-90deg) translateZ(${size/2}px)`);
+                    faces[4].css('transform', `rotateX(90deg) translateZ(${size/2}px)`);
+                    faces[5].css('transform', `rotateX(-90deg) translateZ(${size/2}px)`);
+                    
+                    // Add faces to cube
+                    faces.forEach(face => cube.append(face));
+                    
+                    // Add cube to container
+                    cubeContainer.append(cube);
+                    container.append(cubeContainer);
+                }
+                
+                // Fade in background cubes
+                setTimeout(() => {
+                    container.css('opacity', 1);
+                }, 100);
+            }
+
+            // Show logo text with information
+            function showLogoText() {
+                $('#logoText').css('animation', 'fadeInLogo 3s ease-out forwards');
+                
+                // After 15 seconds, transition to club logo
+                setTimeout(function() {
+                    $('#logoText').fadeOut(2000);
+                    $('#bgCubes').fadeOut(2000, function() {
+                        showClubLogo();
+                    });
+                }, 15000);
+            }
+
+            // Show founders section with animation
+            function showFounders() {
+                $('#foundersSection').css({
+                    'opacity': '1',
+                    'pointer-events': 'all'
+                });
+                
+                // Animate each founder card with delay
+                $('.founder-card').each(function(index) {
+                    $(this).css({
+                        'animation': `fadeInUp 1s ease forwards, cardFloat 6s ease-in-out infinite ${index * 0.5 + 1}s`,
+                        'animation-delay': `${index * 0.3}s`
+                    });
+                });
+                
+                // After 15 seconds, transition to thank message
+                setTimeout(function() {
+                    $('#foundersSection').fadeOut(2000, function() {
+                        showThank();
+                    });
+                }, 15000);
+            }
+
+            // Show club logo with animation
+            function showClubLogo() {
+                $('#logoSection').css({
+                    'opacity': '1',
+                    'pointer-events': 'all'
+                });
+                
+                // Animate the logo
+                setTimeout(function() {
+                    $('#clubLogo').css({
+                        'opacity': '1',
+                        'transform': 'scale(1)'
+                    });
+                    
+                    // Animate the title
+                    setTimeout(function() {
+                        $('.logo-title').css({
+                            'opacity': '1',
+                            'transform': 'translateY(0)'
+                        });
+                    }, 1000);
+                    
+                    // After 15 seconds, remove welcome message, shrink logo to 50%, move to top, and show founders
+                    setTimeout(function() {
+                        // Remove welcome message
+                        $('.logo-title').fadeOut(1000);
+                        
+                        // Shrink logo to 50% and move to top
+                        $('#clubLogo').css({
+                            'transition': 'all 2s ease',
+                            'transform': 'scale(0.5)',
+                            'position': 'absolute',
+                            'top': '20px',
+                            'left': '50%',
+                            'margin-left': '-125px', // Half of 250px (50% of 500px)
+                            'max-width': '250px'
+                        });
+                        
+                        // Show founders after logo animation
+                        setTimeout(showFounders, 2000);
+                    }, 15000);
+                }, 500);
+            }
+
+            // Show thank message
+            function showThank() {
+                $('#logoSection').fadeOut(2000);
+                $('#thankMessage').css({
+                    'opacity': '1'
+                });
+            }
+
+            // Initialize effects
+            createBinaryStream();
+            createFloatingIcons();
+            createParticles();
+
+            // Show CUBE badge after 2 seconds
+            setTimeout(function() {
+                $('#cubeLogoBadge').css('opacity', '1');
+            }, 2000);
+
+            // Show logo text after 15 seconds (cube rotation time)
+            setTimeout(function() {
+                $('#cubeContainer').fadeOut(2000);
+                $('#binaryStream').fadeOut(1500);
+                $('#floatingIcons').fadeOut(1500);
+                
+                setTimeout(function() {
+                    // Create background cubes and show logo
+                    createBackgroundCubes();
+                    showLogoText();
+                }, 1000);
+            }, 15000);
+
+            // Add dynamic lighting effects
+            setInterval(function() {
+                $('.face').each(function() {
+                    const randomOpacity = 0.7 + Math.random() * 0.3;
+                    $(this).css('opacity', randomOpacity);
+                });
+            }, 200);
+
+            // Add mouse interaction
+            $(document).mousemove(function(e) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 20;
+                const y = (e.clientY / window.innerHeight - 0.5) * 20;
+                
+                $('#cubeContainer').css('transform', 
+                    `rotateX(${y}deg) rotateY(${x}deg) rotateZ(0deg)`
+                );
             });
+
+            // Refresh binary stream periodically
+            setInterval(function() {
+                $('.binary-column').each(function() {
+                    let binaryHTML = '';
+                    for (let j = 0; j < 20; j++) {
+                        const digit = Math.random() > 0.5 ? '1' : '0';
+                        const digitClass = digit === '0' ? 'zero' : 'one';
+                        binaryHTML += `<span class="binary-digit ${digitClass}">${digit}</span>`;
+                    }
+                    $(this).html(binaryHTML);
+                });
+            }, 2000);
         });
     </script>
 </body>
